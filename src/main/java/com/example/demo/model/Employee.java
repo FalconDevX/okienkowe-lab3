@@ -1,83 +1,210 @@
 package com.example.demo.model;
 
+import jakarta.persistence.*;
 import javafx.beans.property.*;
 
-public class Employee implements Comparable<Employee> {
-    private final StringProperty firstName;
-    private final StringProperty lastName;
-    private final ObjectProperty<EmployeeCondition> condition;
-    private final IntegerProperty birthYear;
-    private final DoubleProperty salary;
+@Entity
+@Table(name = "employees")
+public class Employee extends AuditableEntity implements Comparable<Employee> {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    public Employee(String firstName, String lastName, EmployeeCondition condition, int birthYear, double salary) {
-        this.firstName = new SimpleStringProperty(firstName);
-        this.lastName = new SimpleStringProperty(lastName);
-        this.condition = new SimpleObjectProperty<>(condition);
-        this.birthYear = new SimpleIntegerProperty(birthYear);
-        this.salary = new SimpleDoubleProperty(salary);
+    @Column(name = "first_name", nullable = false)
+    private String firstName;
+
+    @Column(name = "last_name", nullable = false)
+    private String lastName;
+
+    @Convert(converter = EmployeeConditionConverter.class)
+    @Column(name = "`condition`", nullable = false)
+    private EmployeeCondition condition;
+
+    @Column(name = "birth_year", nullable = false)
+    private Integer birthYear;
+
+    @Column(name = "salary", nullable = false)
+    private Double salary;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id", nullable = false)
+    private ClassEmployee group;
+
+    @Column(name = "deleted")
+    private Boolean deleted = false;
+
+    // JavaFX Properties (transient - nie zapisywane w bazie)
+    @Transient
+    private StringProperty firstNameProperty;
+    @Transient
+    private StringProperty lastNameProperty;
+    @Transient
+    private ObjectProperty<EmployeeCondition> conditionProperty;
+    @Transient
+    private IntegerProperty birthYearProperty;
+    @Transient
+    private DoubleProperty salaryProperty;
+
+    public Employee() {
+        initializeProperties();
     }
 
-    // Property getters
-    public StringProperty firstNameProperty() {
+    public Employee(String firstName, String lastName, EmployeeCondition condition, int birthYear, double salary) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.condition = condition;
+        this.birthYear = birthYear;
+        this.salary = salary;
+        initializeProperties();
+    }
+
+    private void initializeProperties() {
+        this.firstNameProperty = new SimpleStringProperty(firstName);
+        this.lastNameProperty = new SimpleStringProperty(lastName);
+        this.conditionProperty = new SimpleObjectProperty<>(condition);
+        this.birthYearProperty = new SimpleIntegerProperty(birthYear != null ? birthYear : 0);
+        this.salaryProperty = new SimpleDoubleProperty(salary != null ? salary : 0.0);
+        
+        // Synchronizacja properties z polami
+        bindProperties();
+    }
+
+    private void bindProperties() {
+        if (firstNameProperty != null) {
+            firstNameProperty.addListener((obs, oldVal, newVal) -> this.firstName = newVal);
+        }
+        if (lastNameProperty != null) {
+            lastNameProperty.addListener((obs, oldVal, newVal) -> this.lastName = newVal);
+        }
+        if (conditionProperty != null) {
+            conditionProperty.addListener((obs, oldVal, newVal) -> this.condition = newVal);
+        }
+        if (birthYearProperty != null) {
+            birthYearProperty.addListener((obs, oldVal, newVal) -> this.birthYear = newVal.intValue());
+        }
+        if (salaryProperty != null) {
+            salaryProperty.addListener((obs, oldVal, newVal) -> this.salary = newVal.doubleValue());
+        }
+    }
+
+    @PostLoad
+    private void syncPropertiesAfterLoad() {
+        if (firstNameProperty == null) {
+            initializeProperties();
+        }
+        firstNameProperty.set(firstName);
+        lastNameProperty.set(lastName);
+        conditionProperty.set(condition);
+        birthYearProperty.set(birthYear);
+        salaryProperty.set(salary);
+    }
+
+    // Getters and Setters for database fields
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getFirstName() {
         return firstName;
     }
 
-    public StringProperty lastNameProperty() {
-        return lastName;
-    }
-
-    public ObjectProperty<EmployeeCondition> conditionProperty() {
-        return condition;
-    }
-
-    public IntegerProperty birthYearProperty() {
-        return birthYear;
-    }
-
-    public DoubleProperty salaryProperty() {
-        return salary;
-    }
-
-    // Value getters
-    public String getFirstName() {
-        return firstName.get();
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+        if (firstNameProperty != null) {
+            firstNameProperty.set(firstName);
+        }
     }
 
     public String getLastName() {
-        return lastName.get();
-    }
-
-    public EmployeeCondition getCondition() {
-        return condition.get();
-    }
-
-    public int getBirthYear() {
-        return birthYear.get();
-    }
-
-    public double getSalary() {
-        return salary.get();
-    }
-
-    // Value setters
-    public void setFirstName(String firstName) {
-        this.firstName.set(firstName);
+        return lastName;
     }
 
     public void setLastName(String lastName) {
-        this.lastName.set(lastName);
+        this.lastName = lastName;
+        if (lastNameProperty != null) {
+            lastNameProperty.set(lastName);
+        }
+    }
+
+    public EmployeeCondition getCondition() {
+        return condition;
     }
 
     public void setCondition(EmployeeCondition condition) {
-        this.condition.set(condition);
+        this.condition = condition;
+        if (conditionProperty != null) {
+            conditionProperty.set(condition);
+        }
     }
 
-    public void setBirthYear(int birthYear) {
-        this.birthYear.set(birthYear);
+    public Integer getBirthYear() {
+        return birthYear;
     }
 
-    public void setSalary(double salary) {
-        this.salary.set(salary);
+    public void setBirthYear(Integer birthYear) {
+        this.birthYear = birthYear;
+        if (birthYearProperty != null) {
+            birthYearProperty.set(birthYear);
+        }
+    }
+
+    public Double getSalary() {
+        return salary;
+    }
+
+    public void setSalary(Double salary) {
+        this.salary = salary;
+        if (salaryProperty != null) {
+            salaryProperty.set(salary);
+        }
+    }
+
+    public ClassEmployee getGroup() {
+        return group;
+    }
+
+    public void setGroup(ClassEmployee group) {
+        this.group = group;
+    }
+
+    // JavaFX Property getters (for compatibility with existing code)
+    public StringProperty firstNameProperty() {
+        if (firstNameProperty == null) {
+            initializeProperties();
+        }
+        return firstNameProperty;
+    }
+
+    public StringProperty lastNameProperty() {
+        if (lastNameProperty == null) {
+            initializeProperties();
+        }
+        return lastNameProperty;
+    }
+
+    public ObjectProperty<EmployeeCondition> conditionProperty() {
+        if (conditionProperty == null) {
+            initializeProperties();
+        }
+        return conditionProperty;
+    }
+
+    public IntegerProperty birthYearProperty() {
+        if (birthYearProperty == null) {
+            initializeProperties();
+        }
+        return birthYearProperty;
+    }
+
+    public DoubleProperty salaryProperty() {
+        if (salaryProperty == null) {
+            initializeProperties();
+        }
+        return salaryProperty;
     }
 
     // printing
@@ -107,6 +234,24 @@ public class Employee implements Comparable<Employee> {
     @Override
     public int hashCode() {
         return java.util.Objects.hash(getFirstName(), getLastName());
+    }
+
+    // Soft delete
+    public void delete() {
+        this.deleted = true;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    // Restore dla usuniętych pracowników
+    public void restore() {
+        this.deleted = false;
     }
 }
 

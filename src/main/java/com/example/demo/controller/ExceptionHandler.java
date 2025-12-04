@@ -13,12 +13,12 @@ import java.util.Optional;
 public class ExceptionHandler {
     private static final String LOG_FILE = "exceptions.log";
 
-    public static void handleException(Exception e) {
+    public static void handleException(Throwable e) {
         logException(e);
         showErrorAlert(e);
     }
 
-    private static void logException(Exception e) {
+    private static void logException(Throwable e) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(LOG_FILE, true))) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             writer.println("[" + LocalDateTime.now().format(formatter) + "] " + e.getClass().getSimpleName() + ": " + e.getMessage());
@@ -29,7 +29,7 @@ public class ExceptionHandler {
         }
     }
 
-    private static void showErrorAlert(Exception e) {
+    private static void showErrorAlert(Throwable e) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Błąd");
         

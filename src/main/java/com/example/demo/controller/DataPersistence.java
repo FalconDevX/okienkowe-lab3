@@ -70,7 +70,7 @@ public class DataPersistence {
         showProgressDialog(exportTask, "Eksport do JSON");
     }
 
-    public static void exportToCSV(ClassEmployee group, File file) {
+    public static void exportToCSV(String groupName, File file, EmployeeDAO employeeDAO) {
         Task<Void> exportTask = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
@@ -80,16 +80,27 @@ public class DataPersistence {
                 try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
                     writer.println("Imię,Nazwisko,Stan,Rok urodzenia,Wynagrodzenie");
                     
-                    List<Employee> employees = group.getEmployees();
-                    for (int i = 0; i < employees.size(); i++) {
-                        Employee emp = employees.get(i);
-                        writer.printf("%s,%s,%s,%d,%.2f%n",
-                                emp.getFirstName(),
-                                emp.getLastName(),
-                                emp.getCondition(),
-                                emp.getBirthYear(),
-                                emp.getSalary());
-                        updateProgress((i + 1) * 100 / employees.size(), 100);
+                    // Użycie HQL do pobrania danych z bazy
+                    org.hibernate.Session session = com.example.demo.controller.HibernateUtil.getSessionFactory().openSession();
+                    try {
+                        org.hibernate.query.Query<Employee> query = session.createQuery(
+                                "FROM Employee e WHERE e.group.groupName = :groupName ORDER BY e.lastName", 
+                                Employee.class);
+                        query.setParameter("groupName", groupName);
+                        List<Employee> employees = query.list();
+                        
+                        for (int i = 0; i < employees.size(); i++) {
+                            Employee emp = employees.get(i);
+                            writer.printf("%s,%s,%s,%d,%.2f%n",
+                                    emp.getFirstName(),
+                                    emp.getLastName(),
+                                    emp.getCondition(),
+                                    emp.getBirthYear(),
+                                    emp.getSalary());
+                            updateProgress((i + 1) * 100 / employees.size(), 100);
+                        }
+                    } finally {
+                        session.close();
                     }
                 }
 

@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import jakarta.persistence.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,28 +14,83 @@ import java.util.Optional;
 import java.time.Year;
 import java.util.IntSummaryStatistics;
 
-public class ClassEmployee {
+@Entity
+@Table(name = "class_employees")
+public class ClassEmployee extends AuditableEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "group_name", nullable = false, unique = true)
     private String groupName;
+
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Employee> employees;
+
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Rate> rates;
+
+    @Column(name = "max_capacity", nullable = false)
     private int maxCapacity;
 
     // konstruktor
+    public ClassEmployee() {
+        this.employees = new ArrayList<>();
+        this.rates = new ArrayList<>();
+    }
+
     public ClassEmployee(String groupName, int maxCapacity) {
         this.groupName = groupName;
         this.employees = new ArrayList<>();
+        this.rates = new ArrayList<>();
         this.maxCapacity = maxCapacity;
+    }
+
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getGroupName() {
         return groupName;
     }
 
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
+    }
+
     public List<Employee> getEmployees() {
+        if (employees == null) {
+            employees = new ArrayList<>();
+        }
         return employees;
+    }
+
+    public void setEmployees(List<Employee> employees) {
+        this.employees = employees;
+    }
+
+    public List<Rate> getRates() {
+        if (rates == null) {
+            rates = new ArrayList<>();
+        }
+        return rates;
+    }
+
+    public void setRates(List<Rate> rates) {
+        this.rates = rates;
     }
 
     public int getMaxCapacity() {
         return maxCapacity;
+    }
+
+    public void setMaxCapacity(int maxCapacity) {
+        this.maxCapacity = maxCapacity;
     }
 
     // check if employee exists
@@ -57,11 +113,12 @@ public class ClassEmployee {
             return false;
         }
         // Sprawdzenie czy jest miejsce w grupie
-        if (employees.size() >= maxCapacity) {
+        if (getEmployees().size() >= maxCapacity) {
             System.out.println("Brak miejsca w grupie");
             return false;
         }
-        employees.add(employee);
+        employee.setGroup(this);
+        getEmployees().add(employee);
         return true;
     }
 

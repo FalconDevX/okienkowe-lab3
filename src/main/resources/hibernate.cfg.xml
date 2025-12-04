@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+    <session-factory>
+        <!-- Database connection settings -->
+        <property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+        <property name="hibernate.connection.url">jdbc:mysql://mysql-2e89c503-kontoosobistedl-a36a.k.aivencloud.com:25913/defaultdb?useSSL=true&amp;requireSSL=true&amp;trustServerCertificate=true&amp;serverTimezone=UTC</property>
+        <property name="hibernate.connection.username">avnadmin</property>
+        <property name="hibernate.connection.password">AVNS_S9fQT8npc7XxEmpCYGP</property>
+        
+        <!-- JDBC connection pool settings -->
+        <property name="hibernate.connection.pool_size">5</property>
+        
+        <!-- SQL dialect -->
+        <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+        
+        <!-- Echo all executed SQL to stdout -->
+        <property name="hibernate.show_sql">true</property>
+        <property name="hibernate.format_sql">true</property>
+        
+        <!-- Auto create/update database schema -->
+        <!-- validate - tylko sprawdza schemat, nie modyfikuje -->
+        <!-- update - aktualizuje schemat (może powodować błędy przy istniejących danych) -->
+        <!-- create - tworzy nowy schemat (usuwa dane!) -->
+        <property name="hibernate.hbm2ddl.auto">validate</property>
+        
+        <!-- Current session context -->
+        <property name="hibernate.current_session_context_class">thread</property>
+        
+        <!-- Quote identifiers (use backticks for MySQL reserved words) -->
+        <property name="hibernate.globally_quoted_identifiers">true</property>
+        
+        <!-- Mapping files / annotated classes are added programmatically in HibernateUtil -->
+    </session-factory>
+</hibernate-configuration>
+
